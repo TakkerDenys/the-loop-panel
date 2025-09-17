@@ -37,7 +37,7 @@ The platform streamlines content and advertisement management, provides flexible
 
 <tr>
 <td width="120" style="vertical-align:top; padding-right:15px;">
-<img src="https://github.com/user-attachments/assets/14cee026-193a-4af9-9016-975589ddb732" width="100" style="border-radius:50%;"/>
+<img src="https://github.com/user-attachments/assets/fc10c37f-31e7-4b6b-948a-4277c7fcfc8b" width="100" style="border-radius:50%;"/>
 </td>
 <td style="vertical-align:top;">
 <h3>Yurii Petsa – Co-founder & CTO</h3>
