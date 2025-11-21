@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from 'src/users/user.entity';
 import { SignUpRequestDto } from './dtos/signup-request.dto';
 import { LoginRequestDto } from './dtos/login-request.dto';
@@ -9,6 +9,7 @@ import { UserService } from 'src/users/user.service';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { AuthResponse } from './dtos/auth-response.dto';
+import ms, { StringValue } from 'ms';
 
 @Injectable()
 export class AuthService {
@@ -22,13 +23,12 @@ export class AuthService {
     signUpRequest: SignUpRequestDto,
     res: Response,
   ): Promise<AuthResponse> {
-    const isEmailUnique = await this.userService.getByEmail(
-      signUpRequest.email,
-    );
+    const isEmailTaken = await this.userService.getByEmail(signUpRequest.email);
 
-    if (isEmailUnique) {
-      throw new Error(
+    if (isEmailTaken) {
+      throw new HttpException(
         'The error occured during registration: the email is already taken',
+        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -53,17 +53,19 @@ export class AuthService {
     res: Response,
   ): Promise<AuthResponse> {
     const user = await this.userService.getByEmail(loginRequest.email);
+    const loginErrorText = "The credentials aren't correct";
+
     if (!user) {
-      throw new Error("The user isn't registered yet");
+      throw new HttpException(loginErrorText, HttpStatus.BAD_REQUEST);
     }
 
-    const isValidUser = await bcrypt.compare(
+    const isPassMatch = await bcrypt.compare(
       loginRequest.password,
       user.password,
     );
 
-    if (!isValidUser) {
-      throw new Error("The credentials aren't correct");
+    if (!isPassMatch) {
+      throw new HttpException(loginErrorText, HttpStatus.BAD_REQUEST);
     }
 
     const payload: JwtPayload = { userId: user.id };
@@ -76,18 +78,29 @@ export class AuthService {
     return { jwt: accessToken };
   }
 
-  async refresh(jwtPayload: JwtPayload, res: Response) {
+  async refresh(jwtPayload: JwtPayload, res: Response): Promise<AuthResponse> {
     if (await this.userService.isUserExist(jwtPayload.userId)) {
-      const newToken = await this.generateJwtRefreshToken(jwtPayload);
-      await this.userService.updateRefreshToken(jwtPayload.userId, newToken);
-      this.setRefreshTokenInCookie(res, newToken);
+      const newRefreshToken = await this.generateJwtRefreshToken(jwtPayload);
+      await this.userService.updateRefreshToken(
+        jwtPayload.userId,
+        newRefreshToken,
+      );
+
+      this.setRefreshTokenInCookie(res, newRefreshToken);
+      return { jwt: await this.generateJwtAccessToken(jwtPayload) };
     }
+
+    throw new HttpException(
+      "The user wasn't isn't exist",
+      HttpStatus.BAD_REQUEST,
+    );
   }
 
   async logout(jwtPayload: JwtPayload, res: Response) {
     if (await this.userService.isUserExist(jwtPayload.userId)) {
       await this.userService.updateRefreshToken(jwtPayload.userId, null);
       res.clearCookie('refresh_token');
+      res.status(HttpStatus.NO_CONTENT);
     }
   }
 
@@ -106,11 +119,14 @@ export class AuthService {
   }
 
   setRefreshTokenInCookie(res: Response, token: string) {
+    const refreshTokenExp = this.configService.get<string>(
+      'JWT_REFRESH_EXPIRES_IN',
+    );
     res.cookie('refresh_token', token, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: ms(refreshTokenExp as StringValue),
     });
   }
 }

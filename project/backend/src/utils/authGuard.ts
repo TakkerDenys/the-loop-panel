@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
@@ -28,8 +34,9 @@ export class AuthGuard implements CanActivate {
     const token = this.getJwtTokenFromRequest(request);
 
     if (!token) {
-      throw new Error(
+      throw new HttpException(
         'This request cannot be processed. The JWT token has not been provided.',
+        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -45,8 +52,9 @@ export class AuthGuard implements CanActivate {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
 
     if (!type || type !== 'Bearer') {
-      throw new Error(
+      throw new HttpException(
         "The authorisation type is incorrect. It must be 'Bearer' with a JWT token",
+        HttpStatus.BAD_REQUEST,
       );
     }
 
