@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { IntegrationService } from './integration.service';
 import { WeatherDto } from './dtos/weather.dto';
-import { ApiOkResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 
 @Controller('/api/integrations')
 export class IntegrationController {
@@ -10,6 +10,7 @@ export class IntegrationController {
   @Get('/weather')
   @ApiOkResponse({ type: WeatherDto })
   @ApiQuery({ name: 'lang', required: false })
+  @ApiBearerAuth('access-token')
   async getWeather(
     @Query('location') location?: string,
     @Query('lang') lang?: string,
