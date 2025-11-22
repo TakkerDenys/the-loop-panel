@@ -1,7 +1,7 @@
-import {useNavigationStore} from '../../store/navigationStore';
+import {useNavigate} from 'react-router-dom';
 
 export default function Header() {
-    const {setCurrentAuthPage} = useNavigationStore();
+    const navigate = useNavigate();
 
     return (
         <header className="bg-gray-900 border-b border-gray-700">
@@ -12,13 +12,13 @@ export default function Header() {
                 {/* Buttons */}
                 <div className="flex items-center gap-4">
                     <button
-                        onClick={() => setCurrentAuthPage('login')}
+                        onClick={() => navigate('/login')}
                         className="px-6 py-2 text-gray-300 hover:text-white transition-colors"
                     >
                         Увійти
                     </button>
                     <button
-                        onClick={() => setCurrentAuthPage('register')}
+                        onClick={() => navigate('/register')}
                         className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                         Зареєструватись
