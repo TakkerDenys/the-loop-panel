@@ -1,5 +1,6 @@
 import {useNavigationStore} from '../../store/navigationStore';
 import type {AdminPage} from '../../lib/types';
+import {useAuthStore} from "../../store/authStore.ts";
 
 const menuItems = [
     {id: 'control' as AdminPage, label: 'Керування'},
@@ -9,6 +10,7 @@ const menuItems = [
 
 export default function Sidebar() {
     const {currentPage, setCurrentPage} = useNavigationStore();
+    const {logout} = useAuthStore();
 
     return (
         <div className="w-64 h-screen bg-gray-900 text-white flex flex-col">
@@ -40,6 +42,7 @@ export default function Sidebar() {
             {/* Exit button pinned to bottom */}
             <div className="p-4 border-t border-gray-700">
                 <button
+                    onClick={logout}
                     className="w-full px-4 py-3 text-left text-gray-300 hover:bg-gray-800 rounded-lg transition-colors">
                     Вихід
                 </button>
