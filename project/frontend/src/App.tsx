@@ -1,5 +1,5 @@
+import {BrowserRouter, Routes, Route, Navigate} from 'react-router-dom';
 import {useAuthStore} from './store/authStore';
-import {useNavigationStore} from './store/navigationStore';
 import {useEffect} from 'react';
 
 // Auth pages
@@ -13,46 +13,45 @@ import ControlPage from './components/admin/ControlPage';
 import ViewPage from './components/admin/ViewPage';
 import SettingsPage from './components/admin/SettingsPage';
 
-function App() {
-    const {isAuthenticated, initialize} = useAuthStore();
-    const {currentPage, currentAuthPage} = useNavigationStore();
+// Protected route
+import ProtectedRoute from './components/ProtectedRoute';
 
+function App() {
+    const {initialize} = useAuthStore();
+
+    // Initialize auth on app start
     useEffect(() => {
         initialize();
     }, [initialize]);
 
-    // If not authenticated - show auth pages
-    if (!isAuthenticated) {
-        switch (currentAuthPage) {
-            case 'landing':
-                return <LandingPage/>;
-            case 'login':
-                return <LoginPage/>;
-            case 'register':
-                return <RegisterPage/>;
-            default:
-                return <LandingPage/>;
-        }
-    }
-
-    // If authenticated - show admin panel
-    const renderAdminPage = () => {
-        switch (currentPage) {
-            case 'control':
-                return <ControlPage/>;
-            case 'view':
-                return <ViewPage/>;
-            case 'settings':
-                return <SettingsPage/>;
-            default:
-                return <ControlPage/>;
-        }
-    };
-
     return (
-        <AdminLayout>
-            {renderAdminPage()}
-        </AdminLayout>
+        <BrowserRouter>
+            <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<LandingPage/>}/>
+                <Route path="/login" element={<LoginPage/>}/>
+                <Route path="/register" element={<RegisterPage/>}/>
+
+                {/* Protected admin routes */}
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute>
+                            <AdminLayout/>
+                        </ProtectedRoute>
+                    }
+                >
+                    {/* Nested admin routes */}
+                    <Route index element={<Navigate to="/admin/control" replace/>}/>
+                    <Route path="control" element={<ControlPage/>}/>
+                    <Route path="view" element={<ViewPage/>}/>
+                    <Route path="settings" element={<SettingsPage/>}/>
+                </Route>
+
+                {/* Fallback for unknown routes */}
+                <Route path="*" element={<Navigate to="/" replace/>}/>
+            </Routes>
+        </BrowserRouter>
     );
 }
 
