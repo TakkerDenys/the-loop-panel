@@ -5,10 +5,10 @@ import {useNavigationStore} from '../../store/navigationStore';
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const {login} = useAuthStore();
+    const {login, isLoading, error} = useAuthStore();
     const {setCurrentAuthPage} = useNavigationStore();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!email || !password) {
@@ -16,7 +16,7 @@ export default function LoginPage() {
             return;
         }
 
-        login({email, password});
+        await login({email, password});
     };
 
     return (
@@ -29,6 +29,12 @@ export default function LoginPage() {
 
                 <h2 className="text-2xl font-semibold text-white mb-6">Вхід</h2>
 
+                {error && (
+                    <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm">
+                        {error}
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -38,9 +44,12 @@ export default function LoginPage() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2
-  focus:ring-blue-500 focus:border-transparent"
+                            disabled={isLoading}
+                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400
+  focus:ring-2
+    focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                             placeholder="your@email.com"
+                            required
                         />
                     </div>
 
@@ -52,17 +61,22 @@ export default function LoginPage() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2
-  focus:ring-blue-500 focus:border-transparent"
+                            disabled={isLoading}
+                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400
+  focus:ring-2
+    focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                             placeholder="••••••••"
+                            required
                         />
                     </div>
 
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium mt-6"
+                        disabled={isLoading}
+                        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium mt-6
+  disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Увійти
+                        {isLoading ? 'Вхід...' : 'Увійти'}
                     </button>
                 </form>
 
