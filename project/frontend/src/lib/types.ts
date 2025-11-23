@@ -1,4 +1,4 @@
-export type AdminPage = 'control' | 'view' | 'settings';
+export type AdminPage = 'control' | 'settings';
 
 export interface MenuItem {
     id: AdminPage;

@@ -4,7 +4,6 @@ import type {AdminPage} from '../../lib/types';
 
 const menuItems = [
     {id: 'control' as AdminPage, label: 'Керування', path: '/admin/control'},
-    {id: 'view' as AdminPage, label: 'Перегляд', path: '/admin/view'},
     {id: 'settings' as AdminPage, label: 'Налаштування', path: '/admin/settings'},
 ];
 

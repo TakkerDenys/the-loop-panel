@@ -44,9 +44,11 @@ function App() {
                     {/* Nested admin routes */}
                     <Route index element={<Navigate to="/admin/control" replace/>}/>
                     <Route path="control" element={<ControlPage/>}/>
-                    <Route path="view" element={<ViewPage/>}/>
                     <Route path="settings" element={<SettingsPage/>}/>
                 </Route>
+
+                {/* Public player - fullscreen without admin layout */}
+                <Route path="/player" element={<ViewPage/>}/>
 
                 {/* Fallback for unknown routes */}
                 <Route path="*" element={<Navigate to="/" replace/>}/>
