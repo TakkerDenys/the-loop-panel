@@ -1,0 +1,209 @@
+{
+  "info": {
+    "name": "The Loop Panel - Test Cases",
+    "description": "API test cases for The Loop Panel authentication system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "TC-001: User Registration",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate unique email using timestamp",
+              "const timestamp = Date.now();",
+              "pm.environment.set(\"unique_email\", `testuser${timestamp}@example.com`);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Response has JWT token\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('jwt');",
+              "    pm.expect(jsonData.jwt).to.be.a('string');",
+              "    pm.expect(jsonData.jwt.length).to.be.above(20);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 1000ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+              "});",
+              "",
+              "// Save password for TC-002",
+              "pm.environment.set(\"test_password\", \"Test123456\");"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"{{unique_email}}\",\n  \"password\": \"Test123456\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/signup",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "auth",
+            "signup"
+          ]
+        },
+        "description": "Test Case 1: Register a new user with valid credentials.\n\nEmail is dynamically generated using timestamp to avoid conflicts.\n\nExpected Result:\n- Status: 201 Created\n- Response contains JWT token\n- User created in database"
+      },
+      "response": []
+    },
+    {
+      "name": "TC-002: Login with Valid Credentials",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Response has JWT token\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('jwt');",
+              "    pm.expect(jsonData.jwt).to.be.a('string');",
+              "});",
+              "",
+              "pm.test(\"JWT token is valid format\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    // JWT format: xxx.yyy.zzz",
+              "    pm.expect(jsonData.jwt.split('.')).to.have.lengthOf(3);",
+              "});",
+              "",
+              "pm.test(\"Response time is less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "// Save token to environment for future requests",
+              "var jsonData = pm.response.json();",
+              "pm.environment.set(\"auth_token\", jsonData.jwt);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{unique_email}}\",\n  \"password\": \"{{test_password}}\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Test Case 2: Login with valid email and password.\n\nPreconditions:\n- User must be registered (run TC-001 first)\n- Uses same email and password from TC-001\n\nExpected Result:\n- Status: 200 OK\n- Response contains valid JWT token\n- Token can be used for authentication"
+      },
+      "response": []
+    },
+    {
+      "name": "TC-003: Login with Invalid Credentials",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Response has error message\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('message');",
+              "    pm.expect(jsonData).to.have.property('statusCode');",
+              "    pm.expect(jsonData.statusCode).to.equal(400);",
+              "});",
+              "",
+              "pm.test(\"Response does NOT contain JWT token\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.not.have.property('jwt');",
+              "});",
+              "",
+              "pm.test(\"Error message indicates invalid credentials\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var message = jsonData.message.toLowerCase();",
+              "    // Check if message contains keywords like 'invalid', 'credentials', 'bad request'",
+              "    var isValid = message.includes('invalid') || ",
+              "                  message.includes('credentials') || ",
+              "                  message.includes('password') ||",
+              "                  message.includes('incorrect');",
+              "    pm.expect(isValid).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"WrongPassword123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Test Case 3: Negative test - login with wrong password.\n\nPreconditions:\n- User exists in database\n- Using WRONG password\n\nExpected Result:\n- Status: 400 Bad Request\n- Response contains error message\n- NO JWT token returned\n- Security validation works correctly"
+      },
+      "response": []
+    }
+  ]
+}
