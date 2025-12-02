@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 import { SignUpRequestDto } from 'src/auth/dtos/signup-request.dto';
 import bcrypt from 'bcrypt';
 
@@ -10,9 +10,6 @@ export class User {
     this.email = signUpRequest.email;
     this.password = signUpRequest.password;
   }
-
-  @Prop({ name: '_id' })
-  id: string;
 
   @Prop()
   name: string;
@@ -28,6 +25,13 @@ export class User {
 
   @Prop({ name: 'created_at' })
   createdAt: string;
+
+  @Prop({
+    name: 'video_player_id',
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'VideoPlayer',
+  })
+  videoPlayerId: string;
 }
 
 export type UserDocument = User & Document;

@@ -68,11 +68,11 @@ export class AuthService {
       throw new HttpException(loginErrorText, HttpStatus.BAD_REQUEST);
     }
 
-    const payload: JwtPayload = { userId: user.id };
+    const payload: JwtPayload = { userId: user._id as string };
     const accessToken = await this.generateJwtAccessToken(payload);
 
     const refreshToken = await this.generateJwtRefreshToken(payload);
-    await this.userService.updateRefreshToken(user.id, refreshToken);
+    await this.userService.updateRefreshToken(user._id as string, refreshToken);
 
     this.setRefreshTokenInCookie(res, refreshToken);
     return { jwt: accessToken };
