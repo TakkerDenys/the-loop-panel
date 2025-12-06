@@ -1,9 +1,10 @@
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useVideoStore} from '../../store/videoStore';
 
 export default function VideoPlayer() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const lastUpdateRef = useRef(0);
+    const [videoError, setVideoError] = useState<string | null>(null);
 
     const {
         currentVideo,
@@ -12,8 +13,14 @@ export default function VideoPlayer() {
         updateTime,
         setDuration,
         setPlayerState,
-        nextVideo
+        nextVideo,
+        playlist
     } = useVideoStore();
+
+    // Reset error when video changes
+    useEffect(() => {
+        setVideoError(null);
+    }, [currentVideo?.id]);
 
     // Sync player state (play/pause) with video element
     useEffect(() => {
@@ -23,6 +30,7 @@ export default function VideoPlayer() {
             videoRef.current.play().catch((error) => {
                 console.error('Play failed:', error);
                 setPlayerState('paused');
+                setVideoError('Не вдалося відтворити відео');
             });
         } else if (playerState === 'paused') {
             videoRef.current.pause();
@@ -39,12 +47,13 @@ export default function VideoPlayer() {
         }
     }, [currentTime]);
 
-    // When video metadata loads - set duration and auto-play
+    // When video metadata loads - set duration
     const handleLoadedMetadata = () => {
         if (videoRef.current) {
             const videoDuration = videoRef.current.duration;
             console.log('Video loaded, duration:', videoDuration);
             setDuration(videoDuration);
+            setVideoError(null);
         }
     };
 
@@ -64,7 +73,6 @@ export default function VideoPlayer() {
         const now = Date.now();
         if (now - lastUpdateRef.current >= 500) {
             const time = videoRef.current.currentTime;
-            console.log('Time update:', time);
             updateTime(time);
             lastUpdateRef.current = now;
         }
@@ -74,9 +82,13 @@ export default function VideoPlayer() {
     const handleEnded = () => {
         console.log('Video ended');
         setPlayerState('ended');
-        setTimeout(() => {
-            nextVideo();
-        }, 1000);
+
+        // Only advance if there are more videos
+        if (playlist.length > 1) {
+            setTimeout(() => {
+                nextVideo();
+            }, 1000);
+        }
     };
 
     const handleWaiting = () => {
@@ -84,28 +96,128 @@ export default function VideoPlayer() {
         setPlayerState('loading');
     };
 
+    const handleError = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+        console.error('Video error:', e);
+        const video = e.currentTarget;
+        let errorMessage = 'Помилка завантаження відео';
+
+        if (video.error) {
+            switch (video.error.code) {
+                case MediaError.MEDIA_ERR_ABORTED:
+                    errorMessage = 'Завантаження відео було перервано';
+                    break;
+                case MediaError.MEDIA_ERR_NETWORK:
+                    errorMessage = 'Помилка мережі при завантаженні відео';
+                    break;
+                case MediaError.MEDIA_ERR_DECODE:
+                    errorMessage = 'Помилка декодування відео';
+                    break;
+                case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                    errorMessage = 'Формат відео не підтримується або файл не знайдено';
+                    break;
+            }
+        }
+
+        setVideoError(errorMessage);
+        setPlayerState('paused');
+    };
+
+    // Show message when no playlist
+    if (!playlist || playlist.length === 0) {
+        return (
+            <div className="w-full h-screen bg-black flex flex-col items-center justify-center">
+                <svg
+                    className="w-24 h-24 text-gray-600 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2
+  2v8a2 2 0 002 2z"
+                    />
+                </svg>
+                <div className="text-gray-400 text-xl text-center px-4">
+                    Плейлист порожній
+                </div>
+                <div className="text-gray-500 text-sm mt-2 text-center px-4">
+                    Завантажте відео через панель адміністратора
+                </div>
+            </div>
+        );
+    }
+
+    // Show message when no video selected
+    if (!currentVideo) {
+        return (
+            <div className="w-full h-screen bg-black flex flex-col items-center justify-center">
+                <div className="text-gray-400 text-xl">Оберіть відео для відтворення</div>
+            </div>
+        );
+    }
+
     return (
-        <div className="w-full h-screen bg-black flex items-center justify-center">
-            {currentVideo ? (
-                <video
-                    ref={videoRef}
-                    src={currentVideo.url}
-                    className="w-full h-full object-contain"
-                    onLoadedMetadata={handleLoadedMetadata}
-                    onTimeUpdate={handleTimeUpdate}
-                    onEnded={handleEnded}
-                    onWaiting={handleWaiting}
-                    onCanPlay={handleCanPlay}
-                />
-            ) : (
-                <div className="text-white text-2xl">
-                    No video selected
+        <div className="w-full h-screen bg-black flex items-center justify-center relative">
+            <video
+                key={currentVideo.id} // Force remount on video change
+                ref={videoRef}
+                src={currentVideo.url}
+                className="w-full h-full object-contain"
+                onLoadedMetadata={handleLoadedMetadata}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                onWaiting={handleWaiting}
+                onCanPlay={handleCanPlay}
+                onError={handleError}
+                playsInline
+            />
+
+            {/* Loading Spinner */}
+            {playerState === 'loading' && !videoError && (
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white"></div>
+                        <div className="text-white text-lg mt-4">Завантаження...</div>
+                    </div>
                 </div>
             )}
 
-            {playerState === 'loading' && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="text-white text-xl">Loading...</div>
+            {/* Error Message */}
+            {videoError && (
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-md">
+                    <div className="bg-red-900/90 border border-red-700 rounded-lg p-6 text-center">
+                        <svg
+                            className="w-12 h-12 text-red-400 mx-auto mb-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                        <div className="text-white font-semibold text-lg mb-2">
+                            {videoError}
+                        </div>
+                        <div className="text-gray-300 text-sm">
+                            URL: {currentVideo.url}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Video Info Overlay (optional, can be removed) */}
+            {currentVideo && !videoError && (
+                <div className="absolute bottom-8 left-8 bg-black/70 backdrop-blur-sm rounded-lg px-4 py-2">
+                    <div className="text-white text-sm font-medium">
+                        {currentVideo.title || currentVideo.description}
+                    </div>
                 </div>
             )}
         </div>

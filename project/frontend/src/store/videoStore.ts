@@ -1,6 +1,6 @@
 import {create} from 'zustand';
 import type {Video} from '../lib/videoTypes';
-import {MOCK_VIDEOS} from '../lib/mockData';
+import {videoPlayerApi} from '../lib/api';
 
 type PlayerState = 'playing' | 'paused' | 'loading' | 'ended';
 
@@ -12,6 +12,8 @@ interface VideoStore {
     playerState: PlayerState;
     currentTime: number;
     duration: number;
+    isLoading: boolean;
+    error: string | null;
 
     // Actions
     loadVideo: (videoId: string) => void;
@@ -23,6 +25,11 @@ interface VideoStore {
     updateTime: (time: number) => void;
     setDuration: (duration: number) => void;
     setPlayerState: (state: PlayerState) => void;
+
+    // API Actions
+    loadPlaylistFromAPI: () => Promise<void>;
+    uploadVideo: (file: File, description: string) => Promise<void>;
+    deleteVideo: (videoId: string) => Promise<void>;
 }
 
 // BroadcastChannel for syncing between tabs
@@ -46,15 +53,12 @@ export const useVideoStore = create<VideoStore>((set, get) => {
                 set({currentTime: payload.time});
                 break;
             case 'SET_DURATION':
-                // Sync duration from player tab
                 set({duration: payload.duration});
                 break;
             case 'UPDATE_TIME':
-                // Sync time from player tab (but don't spam)
                 set({currentTime: payload.time});
                 break;
             case 'SET_STATE':
-                // Sync player state
                 set({playerState: payload.state});
                 break;
             case 'LOAD_VIDEO':
@@ -70,35 +74,45 @@ export const useVideoStore = create<VideoStore>((set, get) => {
                 break;
             case 'NEXT':
                 const nextIndex = (get().currentIndex + 1) % get().playlist.length;
-                set({
-                    currentVideo: get().playlist[nextIndex],
-                    currentIndex: nextIndex,
-                    currentTime: 0,
-                    playerState: 'loading'
-                });
+                if (get().playlist.length > 0) {
+                    set({
+                        currentVideo: get().playlist[nextIndex],
+                        currentIndex: nextIndex,
+                        currentTime: 0,
+                        playerState: 'loading'
+                    });
+                }
                 break;
             case 'PREV':
                 const prevIndex = get().currentIndex === 0
                     ? get().playlist.length - 1
                     : get().currentIndex - 1;
-                set({
-                    currentVideo: get().playlist[prevIndex],
-                    currentIndex: prevIndex,
-                    currentTime: 0,
-                    playerState: 'loading'
-                });
+                if (get().playlist.length > 0) {
+                    set({
+                        currentVideo: get().playlist[prevIndex],
+                        currentIndex: prevIndex,
+                        currentTime: 0,
+                        playerState: 'loading'
+                    });
+                }
+                break;
+            case 'PLAYLIST_UPDATED':
+                // Reload playlist when updated from another tab
+                get().loadPlaylistFromAPI();
                 break;
         }
     };
 
     return {
         // Initial state
-        playlist: MOCK_VIDEOS,
-        currentVideo: MOCK_VIDEOS[0],
+        playlist: [],
+        currentVideo: null,
         currentIndex: 0,
         playerState: 'paused',
         currentTime: 0,
         duration: 0,
+        isLoading: false,
+        error: null,
 
         // Actions
         loadVideo: (videoId: string) => {
@@ -126,10 +140,24 @@ export const useVideoStore = create<VideoStore>((set, get) => {
             channel.postMessage({type: 'PLAY'});
         },
 
-        pause: () => {
+        pause: async () => {
             console.log('Store: pause()');
+            const {currentIndex, currentTime} = get();
+
             set({playerState: 'paused'});
             channel.postMessage({type: 'PAUSE'});
+
+            // Save state to backend
+            try {
+                await videoPlayerApi.stop({
+                    currentVideoNum: currentIndex,
+                    timeline: currentTime.toString()
+                });
+                console.log('Pause state saved to backend');
+            } catch (error) {
+                console.error('Failed to save pause state:', error);
+                // Don't show error to user, it's not critical
+            }
         },
 
         seek: (time: number) => {
@@ -144,6 +172,9 @@ export const useVideoStore = create<VideoStore>((set, get) => {
         nextVideo: () => {
             console.log('Store: nextVideo()');
             const {currentIndex, playlist} = get();
+
+            if (playlist.length === 0) return;
+
             const nextIndex = (currentIndex + 1) % playlist.length;
 
             set({
@@ -159,6 +190,9 @@ export const useVideoStore = create<VideoStore>((set, get) => {
         prevVideo: () => {
             console.log('Store: prevVideo()');
             const {currentIndex, playlist} = get();
+
+            if (playlist.length === 0) return;
+
             const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
 
             set({
@@ -172,10 +206,7 @@ export const useVideoStore = create<VideoStore>((set, get) => {
         },
 
         updateTime: (time: number) => {
-            // Update local store
             set({currentTime: time});
-
-            // Broadcast to admin tab (throttled in VideoPlayer)
             channel.postMessage({
                 type: 'UPDATE_TIME',
                 payload: {time}
@@ -184,10 +215,7 @@ export const useVideoStore = create<VideoStore>((set, get) => {
 
         setDuration: (duration: number) => {
             console.log('Store: setDuration()', duration);
-            // Update local store
             set({duration});
-
-            // Broadcast to admin tab
             channel.postMessage({
                 type: 'SET_DURATION',
                 payload: {duration}
@@ -196,14 +224,107 @@ export const useVideoStore = create<VideoStore>((set, get) => {
 
         setPlayerState: (state: PlayerState) => {
             console.log('Store: setPlayerState()', state);
-            // Update local store
             set({playerState: state});
-
-            // Broadcast to admin tab
             channel.postMessage({
                 type: 'SET_STATE',
                 payload: {state}
             });
+        },
+
+        // API Actions
+        loadPlaylistFromAPI: async () => {
+            set({isLoading: true, error: null});
+
+            try {
+                const response = await videoPlayerApi.getOwn();
+                console.log('Loaded playlist from API:', response);
+
+                // Transform backend response to Video[] format
+                // TODO: Adjust this based on actual backend response structure
+                let videos: Video[] = [];
+
+                if (response && response.videos && Array.isArray(response.videos)) {
+                    // Assuming response.videos is array of filenames
+                    videos = response.videos.map((filename: string, index: number) => ({
+                        id: `${response.id}-${index}`,
+                        title: filename,
+                        description: response.description || '',
+                        url: `http://localhost:3000/uploads/videos/${filename}`,
+                        duration: 0, // Will be set when video loads
+                        thumbnail: undefined
+                    }));
+                } else if (Array.isArray(response)) {
+                    // If response is already array of videos
+                    videos = response;
+                }
+
+                set({
+                    playlist: videos,
+                    currentVideo: videos.length > 0 ? videos[0] : null,
+                    currentIndex: 0,
+                    isLoading: false
+                });
+            } catch (error) {
+                console.error('Failed to load playlist:', error);
+                set({
+                    error: error instanceof Error ? error.message : 'Помилка завантаження плейлиста',
+                    isLoading: false
+                });
+            }
+        },
+
+        uploadVideo: async (file: File, description: string) => {
+            set({isLoading: true, error: null});
+
+            try {
+                await videoPlayerApi.upload(file, description);
+
+                // Reload playlist after upload
+                await get().loadPlaylistFromAPI();
+
+                // Notify other tabs to reload
+                channel.postMessage({type: 'PLAYLIST_UPDATED'});
+
+                set({isLoading: false});
+            } catch (error) {
+                console.error('Failed to upload video:', error);
+                set({
+                    error: error instanceof Error ? error.message : 'Помилка завантаження відео',
+                    isLoading: false
+                });
+                throw error; // Re-throw so UploadForm can handle it
+            }
+        },
+
+        deleteVideo: async (videoId: string) => {
+            set({isLoading: true, error: null});
+
+            try {
+                const {playlist} = get();
+                const videoIndex = playlist.findIndex(v => v.id === videoId);
+
+                if (videoIndex === -1) {
+                    throw new Error('Відео не знайдено');
+                }
+
+                // Call API to remove video
+                await videoPlayerApi.removeVideo({currentVideoNum: videoIndex});
+
+                // Reload playlist after deletion
+                await get().loadPlaylistFromAPI();
+
+                // Notify other tabs to reload
+                channel.postMessage({type: 'PLAYLIST_UPDATED'});
+
+                set({isLoading: false});
+            } catch (error) {
+                console.error('Failed to delete video:', error);
+                set({
+                    error: error instanceof Error ? error.message : 'Помилка видалення відео',
+                    isLoading: false
+                });
+                throw error;
+            }
         }
     };
 });
