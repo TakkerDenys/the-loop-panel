@@ -10,8 +10,10 @@ import RegisterPage from './components/auth/RegisterPage';
 // Admin panel
 import AdminLayout from './components/admin/AdminLayout';
 import ControlPage from './components/admin/ControlPage';
-import ViewPage from './components/admin/ViewPage';
 import SettingsPage from './components/admin/SettingsPage';
+
+// Video player
+import VideoPlayer from './components/video/VideoPlayer';
 
 // Protected route
 import ProtectedRoute from './components/ProtectedRoute';
@@ -48,7 +50,7 @@ function App() {
                 </Route>
 
                 {/* Public player - fullscreen without admin layout */}
-                <Route path="/player" element={<ViewPage/>}/>
+                <Route path="/player" element={<VideoPlayer/>}/>
 
                 {/* Fallback for unknown routes */}
                 <Route path="*" element={<Navigate to="/" replace/>}/>
