@@ -1,0 +1,11 @@
+# Uploads
+project/uploads/videos/*.mp4
+project/uploads/videos/*.avi
+project/uploads/videos/*.mov
+project/uploads/videos/*.mkv
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
