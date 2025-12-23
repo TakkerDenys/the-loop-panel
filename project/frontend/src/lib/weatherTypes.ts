@@ -25,9 +25,11 @@ export interface WeatherData {
 }
 
 export type WeatherPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+export type ClockType = 'digital' | 'analog';
 
 export interface WeatherSettings {
     enabled: boolean;
     city: string;
     position: WeatherPosition;
+    clockType: ClockType;
 }

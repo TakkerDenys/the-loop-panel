@@ -1,10 +1,11 @@
 import {useEffect, useState} from 'react';
 import {useWeatherStore} from '../../store/weatherStore';
-import type {WeatherPosition} from '../../lib/weatherTypes';
+import type {WeatherPosition, ClockType} from '../../lib/weatherTypes';
 
 export default function WeatherSettings() {
-    const {enabled, city, position, setEnabled, setCity, setPosition, loadSettings} = useWeatherStore();
+    const {enabled, city, position, clockType, setEnabled, setCity, setPosition, setClockType, loadSettings, triggerRefresh} = useWeatherStore();
     const [localCity, setLocalCity] = useState(city);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         loadSettings();
@@ -30,11 +31,30 @@ export default function WeatherSettings() {
         setPosition(newPosition);
     };
 
+    const handleClockTypeChange = (newClockType: ClockType) => {
+        setClockType(newClockType);
+    };
+
+    const handleRefreshNow = () => {
+        setIsRefreshing(true);
+        triggerRefresh();
+
+        // Reset button state after 2 seconds
+        setTimeout(() => {
+            setIsRefreshing(false);
+        }, 2000);
+    };
+
     const positions: Array<{value: WeatherPosition; label: string}> = [
         {value: 'top-left', label: 'Зверху зліва'},
         {value: 'top-right', label: 'Зверху справа'},
         {value: 'bottom-left', label: 'Знизу зліва'},
         {value: 'bottom-right', label: 'Знизу справа'},
+    ];
+
+    const clockTypes: Array<{value: ClockType; label: string; icon: string}> = [
+        {value: 'digital', label: 'Цифровий', icon: '12:34'},
+        {value: 'analog', label: 'Аналоговий', icon: '🕐'},
     ];
 
     return (
@@ -75,6 +95,29 @@ export default function WeatherSettings() {
                         />
                     </div>
 
+                    {/* Clock type selector */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Тип годинника
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {clockTypes.map((type) => (
+                                <button
+                                    key={type.value}
+                                    onClick={() => handleClockTypeChange(type.value)}
+                                    className={`px-4 py-3 rounded-lg border transition-colors ${
+                                        clockType === type.value
+                                            ? 'bg-blue-600 border-blue-500 text-white'
+                                            : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                                    }`}
+                                >
+                                    <div className="text-2xl mb-1">{type.icon}</div>
+                                    <div className="text-sm">{type.label}</div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Position selector */}
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -95,6 +138,30 @@ export default function WeatherSettings() {
                                 </button>
                             ))}
                         </div>
+                    </div>
+
+                    {/* Refresh button */}
+                    <div>
+                        <button
+                            onClick={handleRefreshNow}
+                            disabled={isRefreshing}
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+                        >
+                            <svg
+                                className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                            </svg>
+                            <span>{isRefreshing ? 'Оновлення...' : 'Оновити зараз'}</span>
+                        </button>
                     </div>
 
                     {/* Preview info */}

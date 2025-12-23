@@ -27,7 +27,7 @@ export default function VideoPlayer() {
         currentIndex
     } = useVideoStore();
 
-    const {loadSettings} = useWeatherStore();
+    const {loadSettings, startSyncListener} = useWeatherStore();
 
     const activeVideoRef = activeVideoIndex === 1 ? video1Ref : video2Ref;
     const nextVideoRef = activeVideoIndex === 1 ? video2Ref : video1Ref;
@@ -36,7 +36,11 @@ export default function VideoPlayer() {
     useEffect(() => {
         loadPlaylistFromAPI();
         loadSettings();
-    }, [loadPlaylistFromAPI, loadSettings]);
+
+        // Start listening for weather settings changes from other tabs/windows
+        const cleanup = startSyncListener();
+        return cleanup;
+    }, [loadPlaylistFromAPI, loadSettings, startSyncListener]);
 
     // Reset error when video changes
     useEffect(() => {
