@@ -4,7 +4,7 @@ import type {AdminPage} from '../../lib/types';
 
 const menuItems = [
     {id: 'control' as AdminPage, label: 'Керування', path: '/admin/control'},
-    {id: 'settings' as AdminPage, label: 'Про авторів ', path: '/admin/settings'},
+    {id: 'settings' as AdminPage, label: 'Головна сторінка ', path: '/'},
 ];
 
 export default function Sidebar() {
