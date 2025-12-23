@@ -1,0 +1,36 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .text-main { font-family: Arial, Helvetica, sans-serif; font-weight: bold; fill: #1A3C52; }
+    </style>
+    <path id="panel" d="M-15 -10 L15 -25 L15 35 L-15 50 Z" fill="#1A3C52"/>
+  </defs>
+
+  <g transform="translate(56, 40)">
+    <rect x="12" y="12" width="376" height="260" rx="20" stroke="#1A3C52" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <path d="M160 280 V295 H240 V280" stroke="#1A3C52" stroke-width="24" stroke-linecap="square"/>
+    <path d="M130 310 H270" stroke="#1A3C52" stroke-width="16" stroke-linecap="round"/>
+
+    <g transform="translate(200, 142)">
+      <use href="#panel" x="-65"/> <use href="#panel" x="0"/>   <use href="#panel" x="65"/>
+
+      <!-- Top arc -->
+      <path d="M-60 -50 Q 0 -110 60 -50" fill="none" stroke="#639B78" stroke-width="18" stroke-linecap="round"/>
+
+      <!-- Top arrow (pointing down-right) -->
+      <path d="M 85,-36 L 65,-20 L 65,-55 Z" fill="#639B78" transform="rotate(55, 75, -50)"/>
+
+      <!-- Bottom arc -->
+      <path d="M60 70 Q 0 130 -60 70" fill="none" stroke="#639B78" stroke-width="18" stroke-linecap="round"/>
+
+      <!-- Bottom arrow (pointing down-left) -->
+      <path d="M -83,80 L -60,63 L -48,90 Z" fill="#639B78" transform="rotate(-55, -75, 70)"/>
+    </g>
+  </g>
+
+  <g text-anchor="middle">
+    <text x="256" y="410" font-size="42" class="text-main">The</text>
+    <text x="256" y="475" font-size="72" class="text-main" letter-spacing="-2">LoopPanel</text>
+  </g>
+</svg>

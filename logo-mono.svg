@@ -1,0 +1,28 @@
+<svg width="400" height="320" viewBox="0 0 400 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <path id="panel" d="M-15 -10 L15 -25 L15 35 L-15 50 Z" fill="#424242"/>
+  </defs>
+
+  <g transform="translate(0, 0)">
+    <rect x="12" y="12" width="376" height="260" rx="20" stroke="#424242" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <path d="M160 280 V295 H240 V280" stroke="#424242" stroke-width="24" stroke-linecap="square"/>
+    <path d="M130 310 H270" stroke="#424242" stroke-width="16" stroke-linecap="round"/>
+
+    <g transform="translate(200, 142)">
+      <use href="#panel" x="-65"/> <use href="#panel" x="0"/>   <use href="#panel" x="65"/>
+
+      <!-- Top arc -->
+      <path d="M-60 -50 Q 0 -110 60 -50" fill="none" stroke="#424242" stroke-width="18" stroke-linecap="round"/>
+
+      <!-- Top arrow (pointing down-right) -->
+      <path d="M 85,-36 L 65,-20 L 65,-55 Z" fill="#424242" transform="rotate(55, 75, -50)"/>
+
+      <!-- Bottom arc -->
+      <path d="M60 70 Q 0 130 -60 70" fill="none" stroke="#424242" stroke-width="18" stroke-linecap="round"/>
+
+      <!-- Bottom arrow (pointing down-left) -->
+      <path d="M -83,80 L -60,63 L -48,90 Z" fill="#424242" transform="rotate(-55, -75, 70)"/>
+    </g>
+  </g>
+</svg>
