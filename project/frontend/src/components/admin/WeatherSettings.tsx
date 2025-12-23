@@ -52,9 +52,12 @@ export default function WeatherSettings() {
         {value: 'bottom-right', label: 'Знизу справа'},
     ];
 
-    const clockTypes: Array<{value: ClockType; label: string; icon: string}> = [
-        {value: 'digital', label: 'Цифровий', icon: '12:34'},
-        {value: 'analog', label: 'Аналоговий', icon: '🕐'},
+    const clockTypes: Array<{value: ClockType; label: string; description: string}> = [
+        {value: 'digital-thin', label: 'Тонкий', description: 'Легкий шрифт'},
+        {value: 'digital-bold', label: 'Товстий', description: 'Жирний шрифт'},
+        {value: 'digital-segment', label: 'LCD', description: 'Сегментний дисплей'},
+        {value: 'analog-minimal', label: 'Мінімал', description: 'Простий циферблат'},
+        {value: 'analog-apple', label: 'Apple', description: 'З цифрами'},
     ];
 
     return (
@@ -100,19 +103,23 @@ export default function WeatherSettings() {
                         <label className="block text-sm font-medium text-gray-300 mb-2">
                             Тип годинника
                         </label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
                             {clockTypes.map((type) => (
                                 <button
                                     key={type.value}
                                     onClick={() => handleClockTypeChange(type.value)}
-                                    className={`px-4 py-3 rounded-lg border transition-colors ${
+                                    className={`w-full px-4 py-3 rounded-lg border transition-colors text-left ${
                                         clockType === type.value
                                             ? 'bg-blue-600 border-blue-500 text-white'
                                             : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                                     }`}
                                 >
-                                    <div className="text-2xl mb-1">{type.icon}</div>
-                                    <div className="text-sm">{type.label}</div>
+                                    <div className="font-medium">{type.label}</div>
+                                    <div className={`text-xs mt-1 ${
+                                        clockType === type.value ? 'text-blue-100' : 'text-gray-400'
+                                    }`}>
+                                        {type.description}
+                                    </div>
                                 </button>
                             ))}
                         </div>

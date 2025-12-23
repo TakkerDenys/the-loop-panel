@@ -17,7 +17,7 @@ const DEFAULT_SETTINGS: WeatherSettings = {
     enabled: false,
     city: 'Київ',
     position: 'top-right',
-    clockType: 'digital',
+    clockType: 'digital-thin',
 };
 
 export const useWeatherStore = create<WeatherStore>((set, get) => ({

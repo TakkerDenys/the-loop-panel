@@ -25,7 +25,12 @@ export interface WeatherData {
 }
 
 export type WeatherPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-export type ClockType = 'digital' | 'analog';
+export type ClockType =
+    | 'digital-thin'
+    | 'digital-bold'
+    | 'digital-segment'
+    | 'analog-minimal'
+    | 'analog-apple';
 
 export interface WeatherSettings {
     enabled: boolean;
