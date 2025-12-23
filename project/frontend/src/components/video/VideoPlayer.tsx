@@ -14,8 +14,14 @@ export default function VideoPlayer() {
         setDuration,
         setPlayerState,
         nextVideo,
-        playlist
+        playlist,
+        loadPlaylistFromAPI
     } = useVideoStore();
+
+    // Load playlist on mount
+    useEffect(() => {
+        loadPlaylistFromAPI();
+    }, [loadPlaylistFromAPI]);
 
     // Reset error when video changes
     useEffect(() => {
@@ -136,8 +142,7 @@ export default function VideoPlayer() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2
-  2v8a2 2 0 002 2z"
+                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                     />
                 </svg>
                 <div className="text-gray-400 text-xl text-center px-4">
@@ -166,6 +171,7 @@ export default function VideoPlayer() {
                 ref={videoRef}
                 src={currentVideo.url}
                 className="w-full h-full object-contain"
+                muted
                 onLoadedMetadata={handleLoadedMetadata}
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={handleEnded}
