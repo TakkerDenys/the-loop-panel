@@ -7,11 +7,11 @@ async function fetchAPI(endpoint: string, options?: RequestInit) {
     const url = `${API_URL}${endpoint}`;
 
     const response = await fetch(url, {
+        ...options,  // Спочатку розгортаємо options
         headers: {
             'Content-Type': 'application/json',
-            ...options?.headers,
+            ...options?.headers,  // ПОТІМ мержимо headers
         },
-        ...options,
     });
 
     if (!response.ok) {
@@ -105,6 +105,8 @@ export const videoPlayerApi = {
     },
 
     removeVideo: async (data: RemoveVideoRequest): Promise<any> => {
+        console.log('[API] removeVideo - data:', data);
+        console.log('[API] removeVideo - JSON.stringify:', JSON.stringify(data));
         return fetchAPIWithAuth('/video-player/remove-video', {
             method: 'POST',
             body: JSON.stringify(data),

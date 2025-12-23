@@ -307,12 +307,31 @@ export const useVideoStore = create<VideoStore>((set, get) => {
                 const {playlist} = get();
                 const videoIndex = playlist.findIndex(v => v.id === videoId);
 
+                console.log('Delete video:', {
+                    videoId,
+                    videoIndex,
+                    playlist: playlist.map(v => v.id),
+                    found: videoIndex !== -1
+                });
+
                 if (videoIndex === -1) {
                     throw new Error('Відео не знайдено');
                 }
 
+                // Try with explicit integer conversion
+                const payload = {
+                    currentVideoNum: parseInt(String(videoIndex), 10)
+                };
+
+                console.log('Sending delete request:', {
+                    payload,
+                    type: typeof payload.currentVideoNum,
+                    isInteger: Number.isInteger(payload.currentVideoNum),
+                    value: payload.currentVideoNum
+                });
+
                 // Call API to remove video
-                await videoPlayerApi.removeVideo({currentVideoNum: videoIndex});
+                await videoPlayerApi.removeVideo(payload);
 
                 // Reload playlist after deletion
                 await get().loadPlaylistFromAPI();

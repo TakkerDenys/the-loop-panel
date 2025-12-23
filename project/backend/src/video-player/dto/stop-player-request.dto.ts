@@ -1,15 +1,17 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsNumber, IsString, Min } from 'class-validator';
+import {ApiProperty} from '@nestjs/swagger';
+import {Type} from 'class-transformer';
+import {IsNumber, IsString, Min} from 'class-validator';
 
 export class StopPlayerRequest {
-  @ApiProperty()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  currentVideoNum: number;
+    @ApiProperty()
+    // @Type must be first for proper transformation before validation
+    // eslint-disable-next-line @typescript-eslint/member-ordering
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0)
+    currentVideoNum: number;
 
-  @ApiProperty()
-  @IsString()
-  timeline: string;
+    @ApiProperty()
+    @IsString()
+    timeline: string;
 }

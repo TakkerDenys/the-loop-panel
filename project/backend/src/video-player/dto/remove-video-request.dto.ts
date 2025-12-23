@@ -1,11 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsNumber, Min } from 'class-validator';
+import {ApiProperty} from '@nestjs/swagger';
+import {Type} from 'class-transformer';
+import {IsNumber, Min} from 'class-validator';
 
 export class RemoveVideoRequest {
-  @ApiProperty()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  currentVideoNum: number;
+    @ApiProperty()
+    // @Type must be first for proper transformation before validation
+    // eslint-disable-next-line @typescript-eslint/member-ordering
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0)
+    currentVideoNum: number;
 }
