@@ -27,6 +27,7 @@ export default function ControlPage() {
 
     const handleUploadSuccess = async () => {
         // Playlist will be reloaded automatically by uploadVideo in store
+        await loadPlaylistFromAPI();
         console.log('Upload successful, playlist reloaded');
     };
 

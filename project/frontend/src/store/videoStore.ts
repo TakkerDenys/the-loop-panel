@@ -243,14 +243,13 @@ export const useVideoStore = create<VideoStore>((set, get) => {
                 // TODO: Adjust this based on actual backend response structure
                 let videos: Video[] = [];
 
-                if (response && response.videos && Array.isArray(response.videos)) {
-                    // Assuming response.videos is array of filenames
-                    videos = response.videos.map((filename: string, index: number) => ({
-                        id: `${response.id}-${index}`,
-                        title: filename,
-                        description: response.description || '',
-                        url: `http://localhost:3000/uploads/videos/${filename}`,
-                        duration: 0, // Will be set when video loads
+                if (response && response.queue && Array.isArray(response.queue)) {
+                    videos = response.queue.map((item: any, index: number) => ({
+                        id: `${response._id}-${index}`,
+                        title: item.name,
+                        description: item.description || '',
+                        url: `http://localhost:3000/uploads/videos/${item.name}`,
+                        duration: 0,
                         thumbnail: undefined
                     }));
                 } else if (Array.isArray(response)) {
