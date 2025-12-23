@@ -1,5 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import {useVideoStore} from '../../store/videoStore';
+import {useWeatherStore} from '../../store/weatherStore';
+import WeatherWidget from '../weather/WeatherWidget';
 
 export default function VideoPlayer() {
     const video1Ref = useRef<HTMLVideoElement>(null);
@@ -25,13 +27,16 @@ export default function VideoPlayer() {
         currentIndex
     } = useVideoStore();
 
+    const {loadSettings} = useWeatherStore();
+
     const activeVideoRef = activeVideoIndex === 1 ? video1Ref : video2Ref;
     const nextVideoRef = activeVideoIndex === 1 ? video2Ref : video1Ref;
 
-    // Load playlist on mount
+    // Load playlist and weather settings on mount
     useEffect(() => {
         loadPlaylistFromAPI();
-    }, [loadPlaylistFromAPI]);
+        loadSettings();
+    }, [loadPlaylistFromAPI, loadSettings]);
 
     // Reset error when video changes
     useEffect(() => {
@@ -310,14 +315,8 @@ export default function VideoPlayer() {
                 </div>
             )}
 
-            {/* Video Info Overlay */}
-            {currentVideo && !videoError && (
-                <div className="absolute bottom-8 left-8 bg-black/70 backdrop-blur-sm rounded-lg px-4 py-2 z-20">
-                    <div className="text-white text-sm font-medium">
-                        {currentVideo.title || currentVideo.description}
-                    </div>
-                </div>
-            )}
+            {/* Weather Widget */}
+            <WeatherWidget />
         </div>
     );
 }

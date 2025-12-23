@@ -1,5 +1,6 @@
 import type {SignUpRequest, LoginRequest, AuthResponse} from './types';
 import type {StopPlayerRequest, RemoveVideoRequest, ChangeOrderRequest} from './videoTypes';
+import type {WeatherData} from './weatherTypes';
 
 const API_URL = 'http://localhost:3000/api';
 
@@ -134,5 +135,13 @@ export const videoPlayerApi = {
 
     remove: async (id: string): Promise<any> => {
         return fetchAPIWithAuth(`/video-player/${id}`, {method: 'DELETE'});
+    },
+};
+
+export const weatherApi = {
+    getWeather: async (city: string, lang: string = 'ua'): Promise<WeatherData> => {
+        return fetchAPIWithAuth(`/integrations/weather?location=${encodeURIComponent(city)}&lang=${lang}`, {
+            method: 'GET',
+        });
     },
 };

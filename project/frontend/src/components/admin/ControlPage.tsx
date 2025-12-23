@@ -2,6 +2,7 @@ import {useEffect} from 'react';
 import AdminControls from '../video/AdminControls';
 import UploadVideoForm from './UploadVideoForm';
 import VideoList from './VideoList';
+import WeatherSettings from './WeatherSettings';
 import {useVideoStore} from '../../store/videoStore';
 import type {Video} from '../../lib/videoTypes';
 
@@ -96,6 +97,9 @@ export default function ControlPage() {
                 onDeleteVideo={handleDeleteVideo}
                 isLoading={isLoading}
             />
+
+            {/* Weather Settings */}
+            <WeatherSettings />
 
             {/* Video controls */}
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
