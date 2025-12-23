@@ -142,18 +142,23 @@ export const useVideoStore = create<VideoStore>((set, get) => {
 
         pause: async () => {
             console.log('Store: pause()');
-            const {currentIndex, currentTime} = get();
+            const {currentIndex, currentTime, playlist} = get();
 
             set({playerState: 'paused'});
             channel.postMessage({type: 'PAUSE'});
 
             // Save state to backend
             try {
-                await videoPlayerApi.stop({
-                    currentVideoNum: currentIndex,
-                    timeline: currentTime.toString()
-                });
-                console.log('Pause state saved to backend');
+                // Only save if we have valid data
+                if (playlist.length > 0 && currentIndex >= 0 && !isNaN(currentTime)) {
+                    await videoPlayerApi.stop({
+                        currentVideoNum: currentIndex,
+                        timeline: currentTime.toString()
+                    });
+                    console.log('Pause state saved to backend');
+                } else {
+                    console.log('Skip saving pause state - invalid data');
+                }
             } catch (error) {
                 console.error('Failed to save pause state:', error);
                 // Don't show error to user, it's not critical
